@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    embedded-database-connection: h2
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
