@@ -17,7 +17,6 @@
         <appender-ref ref="Console" />
     </root>
 
-    <!-- LOG "com.baeldung*" at TRACE level -->
     <logger name="com.bank.atm*" level="trace" additivity="false">
         <appender-ref ref="Console" />
     </logger>
