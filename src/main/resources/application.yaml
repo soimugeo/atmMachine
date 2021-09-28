@@ -2,8 +2,22 @@ spring:
   datasource:
     driver-class-name: org.h2.Driver
     embedded-database-connection: h2
+    username: sa
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+    show-sql: true
   h2:
     console:
       enabled: true
+app:
+  cash-notification-limits:
+    fifty-under-fifteen: 8
+    hundred-under-ten: 5
+    hundred-under-twenty: 10
+    alert-phone-number: "someNumber"
+    alert-email-address: "some@email.com"

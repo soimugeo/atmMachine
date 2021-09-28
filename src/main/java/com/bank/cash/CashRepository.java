@@ -5,4 +5,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CashRepository extends JpaRepository<Cash, Long> {
+
+    Cash getCashByBillValue(int billValue);
 }

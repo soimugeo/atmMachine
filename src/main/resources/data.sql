@@ -1,10 +1,10 @@
-create table bancnota (
-                          billValue int primary key,
-                          numberOfAvailableBills long,
-                          PRIMARY KEY (billValue)
+create table cash (
+                      billValue int primary key,
+                      numberOfAvailableBills long,
+                      PRIMARY KEY (billValue)
 );
 
-insert into bancnota(billValue, numberOfAvailableBills)
+insert into CASH(billValue, numberOfAvailableBills)
 VALUES (1, 100),
        (5, 100),
        (10, 100),

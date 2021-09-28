@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface CashService {
 
-    public List<CashDTO> checkIfWeHaveAmount(int amount) throws AmountCanNotBeWithdrawnException;
-    public AtmResponseDTO getRequiredAmount(String amount) throws AmountCanNotBeWithdrawnException;
+    List<CashDTO> checkIfWeHaveAmount(int amount) throws AmountCanNotBeWithdrawnException;
+    AtmResponseDTO getRequiredAmount(int amount) throws AmountCanNotBeWithdrawnException;
 }

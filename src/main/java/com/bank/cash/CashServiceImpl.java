@@ -2,6 +2,8 @@ package com.bank.cash;
 
 import com.bank.atm.AtmResponseDTO;
 import com.bank.exceptions.AmountCanNotBeWithdrawnException;
+import com.bank.helpers.ConversionHelpers;
+import com.bank.notifications.CashNotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,7 +13,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
+import static com.bank.helpers.ConversionHelpers.cashDtoListToCashList;
 import static com.bank.helpers.ConversionHelpers.cashListToCashDtoList;
 
 @Service
@@ -19,6 +23,11 @@ import static com.bank.helpers.ConversionHelpers.cashListToCashDtoList;
 public class CashServiceImpl implements CashService {
 
     private CashRepository cashRepository;
+
+
+    @Autowired
+    private CashNotificationService cashNotificationService;
+
 
     @Autowired
     public CashServiceImpl(CashRepository cashRepository) {
@@ -45,6 +54,8 @@ public class CashServiceImpl implements CashService {
             Collections.reverse(cashDTOList);
 
             getExactCashNumberList(cashDTOList, resultCashList, amount);
+
+            log.info("Cash that will be taken out is: " + resultCashList);
 
 
             return resultCashList;
@@ -108,12 +119,43 @@ public class CashServiceImpl implements CashService {
     }
 
     @Override
-    public AtmResponseDTO getRequiredAmount(String amount) throws AmountCanNotBeWithdrawnException {
-        Optional<List<CashDTO>> cashDtoListOptional = Optional.ofNullable(checkIfWeHaveAmount(Integer.parseInt(amount)));
+    public AtmResponseDTO getRequiredAmount(int amount) throws AmountCanNotBeWithdrawnException {
+        Optional<List<CashDTO>> cashDtoListOptional = Optional.ofNullable(checkIfWeHaveAmount(amount));
+        AtmResponseDTO atmResponseDTO = new AtmResponseDTO();
         if (cashDtoListOptional.isPresent()) {
             log.info("Required sum is made of: " + cashDtoListOptional.get());
 
+            atmResponseDTO.setAmount(amount);
+            atmResponseDTO.setCashDTOList(cashDtoListOptional.get());
+
+            List<CashDTO> remainingCashResult = updateNrOfBillsInDb(cashDtoListOptional.get());
+
+            List<String> alertNotificationList = cashNotificationService.notifyBillNumberDrop(remainingCashResult);
+            alertNotificationList.forEach(System.out::println);
+        } else {
+            log.error("Operation cannot be made!");
         }
-        return null;
+
+        return atmResponseDTO;
+
+    }
+
+    private List<CashDTO> updateNrOfBillsInDb(List<CashDTO> cashListToWithdraw) {
+        List<CashDTO> remainingCashResult = cashListToWithdraw.stream()
+                .map(cashToWithdraw -> CashDTO.builder()
+                        .billValue(cashToWithdraw.getBillValue())
+                        .numberOfAvailableBills(cashToWithdraw.getNumberOfAvailableBills())
+                        .build())
+                .collect(Collectors.toList());
+
+        remainingCashResult.forEach(remainingCash -> {
+            CashDTO availableCash = ConversionHelpers.cashEntityToDto(cashRepository.getCashByBillValue(remainingCash.getBillValue()));
+            remainingCash.setNumberOfAvailableBills(availableCash.getNumberOfAvailableBills() - remainingCash.getNumberOfAvailableBills());
+        });
+
+        cashRepository.saveAllAndFlush(cashDtoListToCashList(remainingCashResult));
+
+        return remainingCashResult;
+
     }
 }
