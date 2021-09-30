@@ -1,6 +1,7 @@
 package com.bank.interaction;
 
 import com.bank.atm.AtmResponseDTO;
+import com.bank.cash.CashService;
 import com.bank.cash.CashServiceImpl;
 import com.bank.exceptions.AmountCanNotBeWithdrawnException;
 import lombok.extern.slf4j.Slf4j;
@@ -15,11 +16,11 @@ import java.util.Scanner;
 public class InteractionService {
 
 
-    private CashServiceImpl cashServiceImpl;
+    private CashService cashService;
 
     @Autowired
     public InteractionService(CashServiceImpl cashServiceImpl){
-        this.cashServiceImpl = cashServiceImpl;
+        this.cashService = cashServiceImpl;
     }
 
     public void startInteration() {
@@ -34,7 +35,7 @@ public class InteractionService {
                     System.out.println("Insert amount you want to withdraw:");
 
                     try {
-                        AtmResponseDTO atmResponseDTO = cashServiceImpl.getRequiredAmount(scanner.nextInt());
+                        AtmResponseDTO atmResponseDTO = cashService.getRequiredAmount(scanner.nextInt());
                         System.out.println("Operation was made using following bills: "+atmResponseDTO);
                     } catch (AmountCanNotBeWithdrawnException e) {
                         log.error(e.getLocalizedMessage());

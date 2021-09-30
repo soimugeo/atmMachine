@@ -68,54 +68,81 @@ public class CashServiceImpl implements CashService {
 
     private void getExactCashNumberList(List<CashDTO> availableAmount, List<CashDTO> partialResultList, int withdrawAmount) throws AmountCanNotBeWithdrawnException {
         int requiredNrOfBills;
+        long newWithdrawAmount;
         int billValueToProcess = availableAmount.get(0).getBillValue();
         long numberOfAvailableBills = availableAmount.get(0).getNumberOfAvailableBills();
-        if (withdrawAmount % billValueToProcess == 0) {
-            requiredNrOfBills = withdrawAmount / billValueToProcess;
 
-            if (requiredNrOfBills > numberOfAvailableBills) {
-                throw new AmountCanNotBeWithdrawnException("Amount cannot be withdrawn!\n" +
-                        "Not Enough bills for that amount!");
-            } else {
-                partialResultList.add(CashDTO.builder()
-                        .billValue(billValueToProcess)
-                        .numberOfAvailableBills(requiredNrOfBills)
-                        .build());
-            }
+        //ToDo Highlight we had error here
 
-        } else if (availableAmount.stream().anyMatch(cashDTO -> withdrawAmount % cashDTO.getBillValue() == 0)) {
-            int newWithdrawAmount;
-
-            if (withdrawAmount > billValueToProcess) {
+            if (withdrawAmount % billValueToProcess == 0) {
                 requiredNrOfBills = withdrawAmount / billValueToProcess;
 
+                //ToDo investigate this bug
                 if (requiredNrOfBills > numberOfAvailableBills) {
-                    throw new AmountCanNotBeWithdrawnException("Amount cannot be withdrawn!\n" +
-                            "Not Enough bills for that amount!");
+                    long sumWithdrawn = billValueToProcess*numberOfAvailableBills;
+                    newWithdrawAmount=withdrawAmount-sumWithdrawn;
+                    partialResultList.add(CashDTO.builder()
+                            .billValue(billValueToProcess)
+                            .numberOfAvailableBills(numberOfAvailableBills)
+                            .build());
+
+                    availableAmount.remove(0);
+
+                    getExactCashNumberList(availableAmount, partialResultList, Long.valueOf(newWithdrawAmount).intValue());
+
                 } else {
-                    newWithdrawAmount = withdrawAmount % billValueToProcess;
                     partialResultList.add(CashDTO.builder()
                             .billValue(billValueToProcess)
                             .numberOfAvailableBills(requiredNrOfBills)
                             .build());
                 }
+
+            } else if (availableAmount.stream().anyMatch(cashDTO -> withdrawAmount % cashDTO.getBillValue() == 0)) {
+
+                //ToDo Highlight we had error here
+                CashDTO billToProcess = availableAmount.stream().filter(cashDTO -> withdrawAmount % cashDTO.getBillValue() == 0).findFirst().get();
+                billValueToProcess = billToProcess.getBillValue();
+                numberOfAvailableBills = billToProcess.getNumberOfAvailableBills();
+
+                if (withdrawAmount > billValueToProcess) {
+                    requiredNrOfBills = withdrawAmount / billValueToProcess;
+
+                    if (requiredNrOfBills > numberOfAvailableBills) {
+                        long sumWithdrawn = billValueToProcess*numberOfAvailableBills;
+                        newWithdrawAmount=withdrawAmount-sumWithdrawn;
+                        partialResultList.add(CashDTO.builder()
+                                .billValue(billValueToProcess)
+                                .numberOfAvailableBills(numberOfAvailableBills)
+                                .build());
+
+                        availableAmount.remove(billToProcess);
+
+                        getExactCashNumberList(availableAmount, partialResultList, Long.valueOf(newWithdrawAmount).intValue());
+                    } else {
+                        newWithdrawAmount = withdrawAmount - billValueToProcess*numberOfAvailableBills;
+                        partialResultList.add(CashDTO.builder()
+                                .billValue(billValueToProcess)
+                                .numberOfAvailableBills(numberOfAvailableBills)
+                                .build());
+                    }
+                } else {
+                    newWithdrawAmount = withdrawAmount;
+                }
+
+                availableAmount.remove(billToProcess);
+
+                getExactCashNumberList(availableAmount, partialResultList, Long.valueOf(newWithdrawAmount).intValue());
+
+
             } else {
-                newWithdrawAmount = withdrawAmount;
+                Collections.sort(availableAmount);
+                log.error("CURRENT AMOUNT CANNOT BE WITHDRAWN BECAUSE THERE ARE NOT ENOUGH BILLS\n" +
+                        "Please chose a multiplier of: " + billValueToProcess);
+
+                throw new AmountCanNotBeWithdrawnException("CURRENT AMOUNT CANNOT BE WITHDRAWN BECAUSE THERE ARE NOT ENOUGH BILLS\n" +
+                        "Please chose a multiplier of: " + billValueToProcess);
             }
 
-            availableAmount.remove(0);
-
-            getExactCashNumberList(availableAmount, partialResultList, newWithdrawAmount);
-
-
-        } else {
-            Collections.sort(availableAmount);
-            log.error("CURRENT AMOUNT CANNOT BE WITHDRAWN BECAUSE THERE ARE NOT ENOUGH BILLS\n" +
-                    "Please chose a multiplier of: " + billValueToProcess);
-
-            throw new AmountCanNotBeWithdrawnException("CURRENT AMOUNT CANNOT BE WITHDRAWN BECAUSE THERE ARE NOT ENOUGH BILLS\n" +
-                    "Please chose a multiplier of: " + billValueToProcess);
-        }
     }
 
     @Override

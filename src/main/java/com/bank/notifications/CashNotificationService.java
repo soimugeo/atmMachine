@@ -22,24 +22,24 @@ public class CashNotificationService {
     }
 
 
-    public List<String> notifyBillNumberDrop(List<CashDTO> cashDTOList){
+    public List<String> notifyBillNumberDrop(List<CashDTO> remainingCashList){
         List<String> notificationList = new ArrayList<>();
-        cashDTOList.forEach(cashDTO -> {
-            long withdrawNumberOfBills = cashDTO.getNumberOfAvailableBills();
-            int cashBillValue = cashDTO.getBillValue();
+        remainingCashList.forEach(remainingCash -> {
+            long remainingNumberOfBills = remainingCash.getNumberOfAvailableBills();
+            int cashBillValue = remainingCash.getBillValue();
 
             switch (cashBillValue){
                 case 100 -> {
-                    if (withdrawNumberOfBills<cashNotificationLimits.getHundredUnderTen()){
+                    if (remainingNumberOfBills<cashNotificationLimits.getHundredUnderTen()){
                         String message = MessageFormat.format("CRITICAL ----> EMAIL NOTIFICATION: {0} \nCash bill numbers for {1} have dropped under 10%!", cashNotificationLimits.getAlertPhoneNumber(), cashBillValue);
                         notificationList.add(message);
-                    }else if (withdrawNumberOfBills<cashNotificationLimits.getHundredUnderTwenty()){
+                    }else if (remainingNumberOfBills<cashNotificationLimits.getHundredUnderTwenty()){
                         String message = MessageFormat.format("WARNING ----> SMS NOTIFICATION nr:{0} \nCash bill numbers for {1} have dropped under 20%!",cashNotificationLimits.getAlertPhoneNumber(), cashBillValue);
                         notificationList.add(message);
                     }
                 }
                 case 50 -> {
-                    if (withdrawNumberOfBills<cashNotificationLimits.getFiftyUnderFifteen()){
+                    if (remainingNumberOfBills<cashNotificationLimits.getFiftyUnderFifteen()){
                         String message = MessageFormat.format("WARNING ----> EMAIL NOTIFICATION:{0} \nCash bill numbers for {1} have dropped under 15%!",cashNotificationLimits.getAlertEmailAddress(), cashBillValue);
                         notificationList.add(message);
 

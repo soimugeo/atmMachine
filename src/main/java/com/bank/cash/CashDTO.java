@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CashDTO implements Comparable<CashDTO>{
+
     private int billValue;
     private long numberOfAvailableBills;
 
